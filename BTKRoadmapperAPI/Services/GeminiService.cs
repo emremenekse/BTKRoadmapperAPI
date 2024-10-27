@@ -26,7 +26,7 @@ namespace BTKRoadmapperAPI.Services
             var requestBody = new
             {
                 contents = new[]
-            {
+                {
                 new
                 {
                     parts = new[]
@@ -34,7 +34,7 @@ namespace BTKRoadmapperAPI.Services
                         new { text = prompt }
                     }
                 }
-            }
+                }
             };
 
 

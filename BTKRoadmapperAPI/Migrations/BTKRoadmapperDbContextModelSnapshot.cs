@@ -29,9 +29,8 @@ namespace BTKRoadmapperAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CourseName")
                         .IsRequired()
@@ -41,9 +40,11 @@ namespace BTKRoadmapperAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalRequeiredTimeInSeconds")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -63,10 +64,6 @@ namespace BTKRoadmapperAPI.Migrations
 
                     b.Property<int>("LessonCount")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Summary")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
