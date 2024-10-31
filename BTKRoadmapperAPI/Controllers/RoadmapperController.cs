@@ -20,22 +20,20 @@ namespace BTKRoadmapperAPI.Controllers
             _courseService = courseService;
         }
 
-        [HttpGet]
+        [HttpPost]
         [ProducesResponseType(typeof(IEnumerable<List<LLMResponse>>), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> GenerateRoadmap()
+        public async Task<IActionResult> GenerateRoadmap([FromBody] RoadmapDTO roadmap)
         {
-            var roadmapData = await _geminiService.SendPromptAsync();
+            var roadmapData = await _geminiService.SendPromptAsync(roadmap);
             return CreateActionResultInstance(roadmapData);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCourse([FromBody] CourseDTO courseDTO)
+        public async Task<IActionResult> AddCourse([FromBody] List<CourseDTO> courseDTOList)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
-
-            var result = await _courseService.AddNewCourse(courseDTO);
+            var result = await _courseService.AddNewCourse(courseDTOList);
             return CreateActionResultInstance(result);
         }
     }

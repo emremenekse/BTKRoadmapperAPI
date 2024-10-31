@@ -24,19 +24,27 @@
         public async Task<TResponse?> SendRequestAsync<TRequest, TResponse>(
             HttpMethod method, string url, TRequest? body)
         {
-            using var request = new HttpRequestMessage(method, url);
-
-            if (body != null)
+            try
             {
-                var jsonBody = JsonSerializer.Serialize(body);
-                request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+                using var request = new HttpRequestMessage(method, url);
+
+                if (body != null)
+                {
+                    var jsonBody = JsonSerializer.Serialize(body);
+                    request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+                }
+
+                using var response = await _httpClient.SendAsync(request);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<TResponse>(responseContent);
             }
+            catch (Exception ex)
+            {
 
-            using var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<TResponse>(responseContent);
+                throw ex;
+            }
+            
         }
 
     }

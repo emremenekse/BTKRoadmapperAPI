@@ -1,7 +1,9 @@
 ﻿using BTKRoadmapperAPI.Abstractions;
+using BTKRoadmapperAPI.Concrete;
 using BTKRoadmapperAPI.DTOs;
 using BTKRoadmapperAPI.Entities;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace BTKRoadmapperAPI.Services
 {
@@ -29,7 +31,10 @@ namespace BTKRoadmapperAPI.Services
 
             var courses = (await _courseRepository.GetAllWithIncludesAsync(c => c.Modules)).ToList();
 
-            var serializedData = Newtonsoft.Json.JsonConvert.SerializeObject(courses);
+            var serializedData = Newtonsoft.Json.JsonConvert.SerializeObject(courses, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore 
+            });
             var cacheOptions = new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7) 
@@ -38,24 +43,32 @@ namespace BTKRoadmapperAPI.Services
 
             return courses;
         }
-
-        public async Task<Response<bool>> AddNewCourse(CourseDTO courseDTO)
+        public async Task<IEnumerable<Course>> GetCoursesWithModulesByIdsAsync(List<int> courseIds)
         {
-            var course = new Course
+            return await _courseRepository.FindAsyncWithMany(c => courseIds.Contains(c.Id), c => c.Modules);
+        }
+
+        public async Task<Response<bool>> AddNewCourse(List<CourseDTO> courseDTOList)
+        {
+            foreach (var item in courseDTOList)
             {
-                CourseName = courseDTO.CourseName,
-                Category = (Category)courseDTO.Category,
-                TotalRequeiredTimeInSeconds = courseDTO.TotalRequeiredTimeInSeconds,
-                Level = courseDTO.Level,
-                Description = courseDTO.Description,
-                Modules = courseDTO.Modules.Select(m => new Module
+                var course = new Course
                 {
-                    Title = m.Title,
-                    LessonCount = m.LessonCount
-                }).ToList()
-            };
-            await _courseRepository.AddAsync(course);
-            await _unitOfWork.CommitAsync();
+                    CourseName = item.CourseName,
+                    Category = (Category)item.Category,
+                    TotalRequeiredTimeInSeconds = item.TotalRequeiredTimeInSeconds,
+                    Level = item.Level,
+                    Description = item.Description,
+                    Modules = item.Modules.Select(m => new Module
+                    {
+                        Title = m.Title,
+                        LessonCount = m.LessonCount
+                    }).ToList()
+                };
+                await _courseRepository.AddAsync(course);
+                await _unitOfWork.CommitAsync();
+            }
+            
             return Response<bool>.Success(true,201);
 
         }
