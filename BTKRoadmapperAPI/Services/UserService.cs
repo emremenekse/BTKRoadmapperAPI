@@ -2,6 +2,7 @@
 using BTKRoadmapperAPI.Abstractions;
 using BTKRoadmapperAPI.DTOs;
 using BTKRoadmapperAPI.Entities;
+using k8s.KubeConfigModels;
 using System.Collections.Generic;
 
 namespace BTKRoadmapperAPI.Services
@@ -18,13 +19,13 @@ namespace BTKRoadmapperAPI.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<User> GetUserByMail(string mail)
+        public async Task<Response<UserDTO>> GetUserByMail(string mail)
         {
             var userList = await _userRepository.GetAllAsync();
             if (userList.Any(x => x.Email == mail))
             {
                 var user = userList.Where(x => x.Email == mail).FirstOrDefault();
-                return user;
+                return Response<UserDTO>.Success(_mapper.Map<UserDTO>(user),200);
             }
             else
             {
@@ -32,29 +33,35 @@ namespace BTKRoadmapperAPI.Services
             }
 
         }
-
-        public async Task<bool> AddUser(UserDTO userDTO)
+        public async Task<Response<bool>> UpdateUser(UserDTO userDTO)
         {
             var userList = await _userRepository.GetAllAsync();
+            var newUser = _mapper.Map<Entities.User>(userDTO);
             if (userList.Any(x => x.Email == userDTO.Email))
             {
                 var user = userList.Where(x => x.Email == userDTO.Email).FirstOrDefault();
-                user.Preferences?.Add(_mapper.Map<UserPreference>(userDTO.UserPreferences));
+                user = newUser;
                 await _userRepository.UpdateAsync(user);
                 await _unitOfWork.CommitAsync();
+
+                return Response<bool>.Success(true, 201);
             }
             else
             {
-                var PreferencesList = new List<UserPreference>();
-                PreferencesList.Add(_mapper.Map<UserPreference>(userDTO.UserPreferences));
-                var newUser = new User()
-                {
-                    Name = userDTO.Name,
-                    Email = userDTO.Email,
-                    Role = userDTO.Role,
-                    Preferences = PreferencesList
-                };
+                return Response<bool>.Success(false, 400);
             }
+
+        }
+
+        public async Task<bool> AddUser(UserDTO userDTO)
+        {
+
+                var user = _mapper.Map<Entities.User>(userDTO);
+                var userPreference = _mapper.Map<UserPreference>(userDTO.UserPreferences);
+                userPreference.User = user;
+                user.Preferences?.Add(userPreference);
+                await _userRepository.AddAsync(user);
+                await _unitOfWork.CommitAsync();
             return true;
         }
     }

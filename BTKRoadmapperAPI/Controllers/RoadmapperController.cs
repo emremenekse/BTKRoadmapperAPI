@@ -13,11 +13,13 @@ namespace BTKRoadmapperAPI.Controllers
     {
         private readonly GeminiService _geminiService;
         private readonly CourseService _courseService;
+        private readonly UserService _userService;
 
-        public RoadmapperController(GeminiService geminiService, CourseService courseService)
+        public RoadmapperController(GeminiService geminiService, CourseService courseService, UserService userService)
         {
             _geminiService = geminiService;
             _courseService = courseService;
+            _userService = userService;
         }
 
         [HttpPost]
@@ -26,6 +28,13 @@ namespace BTKRoadmapperAPI.Controllers
         {
             var roadmapData = await _geminiService.SendPromptAsync(roadmap);
             return CreateActionResultInstance(roadmapData);
+        }
+        [HttpGet]
+        [ProducesResponseType(typeof(UserDTO), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetUserInfo([FromQuery] string mail)
+        {
+            var userData = await _userService.GetUserByMail(mail);
+            return CreateActionResultInstance(userData);
         }
 
         [HttpPost]

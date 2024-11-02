@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using BTKRoadmapperAPI.DTOs;
 using k8s.Models;
 using System.Text.Json.Nodes;
+using IdentityModel.OidcClient;
 
 namespace BTKRoadmapperAPI.Services
 {
@@ -13,15 +14,17 @@ namespace BTKRoadmapperAPI.Services
         private readonly IConfiguration _configuration;
         private readonly HttpService _httpService;
         private readonly CourseService _courseService;
+        private readonly UserService _userService;
 
-        public GeminiService(IConfiguration configuration, HttpService httpService, CourseService courseService)
+        public GeminiService(IConfiguration configuration, HttpService httpService, CourseService courseService, UserService userService)
         {
             _configuration = configuration;
             _httpService = httpService;
             _courseService = courseService;
+            _userService = userService;
         }
 
-        public async Task<Response<List<LLMResponse>>> SendPromptAsync(RoadmapDTO roadmapDTO)
+        public async Task<Response<List<CourseDTO>>> SendPromptAsync(RoadmapDTO roadmapDTO)
         {
             var apiKey = _configuration["GeminiAPI:ApiKey"];
             var baseUrl = _configuration["GeminiAPI:BaseUrl"];
@@ -101,7 +104,8 @@ Instructions:
                 }
             }
 
-
+            var courseOrders = new List<CourseOrder>();
+            List<CourseDTO> result = new();
             if (courseIds != null)
             {
                 var returnedCourses = await _courseService.GetCoursesWithModulesByIdsAsync(courseIds);
@@ -159,7 +163,7 @@ Instructions:
                 var responseSecond = await _httpService.SendRequestAsync<object, ResponseModel>(
                 HttpMethod.Post, url, requestBodySecond);
 
-                var courseOrders = new List<CourseOrder>();
+                
                 if (responseSecond?.Candidates != null)
                 {
                     foreach (var candidate in responseSecond.Candidates)
@@ -186,10 +190,52 @@ Instructions:
                         }
                     }
                 }
+                if (courseOrders != null)
+                {
+                    var newCourseIds = courseOrders.Select(result => result.CourseId);
+                    var courseFinalListResponse = await _courseService.GetCoursesWithModulesByIdsAsync(newCourseIds.ToList());
+                    foreach (var item in courseFinalListResponse)
+                    {
+                        item.RecommendedOrder = courseOrders.Where(x => x.CourseId == item.Id).FirstOrDefault().RecommendedOrder;
+                    }
+                    result = courseFinalListResponse.ToList();
+                }
+                
 
             }
+            if (!roadmapDTO.IsUser)
+            {
+                var newUser = new UserDTO()
+                {
+                    Email= roadmapDTO.Email,
+                    Role=roadmapDTO.Role,
+                    Name=roadmapDTO.Name,
+                    UserPreferences = new UserPreferencesDTO() {
+                        AvailableHoursPerDaily = roadmapDTO.DailyAvailableTime,
+                        Interest = roadmapDTO.InterestedFields
+                    }
+                        
+                };
+                await _userService.AddUser(newUser);
+            }
+            if (roadmapDTO.HasUserInfoChange)
+            {
+                var newUser = new UserDTO()
+                {
+                    Email = roadmapDTO.Email,
+                    Role = roadmapDTO.Role,
+                    Name = roadmapDTO.Name,
+                    UserPreferences = new UserPreferencesDTO()
+                    {
+                        AvailableHoursPerDaily = roadmapDTO.DailyAvailableTime,
+                        Interest = roadmapDTO.InterestedFields
+                    }
 
-            return null;
+                };
+                await _userService.UpdateUser(newUser);
+            }
+
+            return Response<List< CourseDTO>>.Success(result, 200);
         }
     }
 }

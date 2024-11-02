@@ -1,4 +1,5 @@
-﻿using BTKRoadmapperAPI.Abstractions;
+﻿using AutoMapper;
+using BTKRoadmapperAPI.Abstractions;
 using BTKRoadmapperAPI.Concrete;
 using BTKRoadmapperAPI.DTOs;
 using BTKRoadmapperAPI.Entities;
@@ -12,13 +13,15 @@ namespace BTKRoadmapperAPI.Services
         private readonly ICourseRepository _courseRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDistributedCache _redisCache;
+        private readonly IMapper _mapper;
         private const string CacheKey = "courses_with_modules";
 
-        public CourseService(ICourseRepository courseRepository, IDistributedCache redisCache, IUnitOfWork unitOfWork)
+        public CourseService(ICourseRepository courseRepository, IDistributedCache redisCache, IUnitOfWork unitOfWork, IMapper mapper)
         {
             _courseRepository = courseRepository;
             _redisCache = redisCache;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         public async Task<List<Course>> GetAllCoursesWithModulesAsync()
@@ -43,9 +46,10 @@ namespace BTKRoadmapperAPI.Services
 
             return courses;
         }
-        public async Task<IEnumerable<Course>> GetCoursesWithModulesByIdsAsync(List<int> courseIds)
+        public async Task<IEnumerable<CourseDTO>> GetCoursesWithModulesByIdsAsync(List<int> courseIds)
         {
-            return await _courseRepository.FindAsyncWithMany(c => courseIds.Contains(c.Id), c => c.Modules);
+            var result = await _courseRepository.FindAsyncWithMany(c => courseIds.Contains(c.Id), c => c.Modules);
+            return _mapper.Map<IEnumerable<CourseDTO>>(result);
         }
 
         public async Task<Response<bool>> AddNewCourse(List<CourseDTO> courseDTOList)

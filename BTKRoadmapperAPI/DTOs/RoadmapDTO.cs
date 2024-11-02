@@ -8,8 +8,10 @@
         public required string InterestedFields { get; set; } 
         public EducationLevel EducationLevel { get; set; } 
         public SkillLevel InterestedFieldSkillLevel { get; set; } 
-        public TimeSpan DailyAvailableTime { get; set; } 
-        public TargetField TargetField { get; set; } 
+        public int DailyAvailableTime { get; set; } 
+        public TargetField TargetField { get; set; }
+        public bool IsUser { get; set; }
+        public bool HasUserInfoChange { get; set; }
 
     }
 
