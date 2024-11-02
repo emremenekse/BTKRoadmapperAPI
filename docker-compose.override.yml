@@ -1,0 +1,67 @@
+version: '3.4'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl/:/etc/nginx/ssl/
+    depends_on:
+      - btkakademiroadmapper-client
+      - btkakademiroadmapper-api
+  btkakademiroadmapper-api:
+    image: emremenekse/btkakademiroadmapper:api
+    container_name: btkakademiroadmapper-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - "ConnectionStrings:DatabaseSettings=Server=btkroadmapperdb;Port=5432;Database=BTKRoadmapperDb;User Id=sa;Password=admin;"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+    expose:
+      - "8080"
+    depends_on:
+      - btkroadmapperdb
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  btkroadmapperdb:
+    image: postgres:16
+    container_name: btkroadmapperdb
+    restart: always
+    environment:
+      - POSTGRES_USER=sa
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=BTKRoadmapperDb
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+  btkakademiroadmapper-client:
+    image: emremenekse/btkakademiroadmapper:client
+    container_name: btkakademiroadmapper-client
+    expose:
+      - "80"
+    depends_on:
+      - btkakademiroadmapper-api
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  watchtower:
+    image: containrrr/watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 --label-enable
+volumes:
+  redis_data:
+  postgres_data:
