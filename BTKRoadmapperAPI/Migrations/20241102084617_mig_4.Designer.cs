@@ -2,6 +2,7 @@
 using BTKRoadmapperAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTKRoadmapperAPI.Migrations
 {
     [DbContext(typeof(BTKRoadmapperDbContext))]
-    partial class BTKRoadmapperDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241102084617_mig_4")]
+    partial class mig_4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,41 +87,50 @@ namespace BTKRoadmapperAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AvailableHoursPerDaily")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EducationLevel")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int>("InterestedFieldSkillLevel")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("InterestedFields")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("text");
 
-                    b.Property<int>("TargetField")
+                    b.Property<int>("UserPreferenceId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("BTKRoadmapperAPI.Entities.UserPreference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AvailableHoursPerDaily")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Interest")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserPreferences");
                 });
 
             modelBuilder.Entity("BTKRoadmapperAPI.Entities.Module", b =>
@@ -132,9 +144,26 @@ namespace BTKRoadmapperAPI.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("BTKRoadmapperAPI.Entities.UserPreference", b =>
+                {
+                    b.HasOne("BTKRoadmapperAPI.Entities.User", "User")
+                        .WithOne("UserPreference")
+                        .HasForeignKey("BTKRoadmapperAPI.Entities.UserPreference", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BTKRoadmapperAPI.Entities.Course", b =>
                 {
                     b.Navigation("Modules");
+                });
+
+            modelBuilder.Entity("BTKRoadmapperAPI.Entities.User", b =>
+                {
+                    b.Navigation("UserPreference")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

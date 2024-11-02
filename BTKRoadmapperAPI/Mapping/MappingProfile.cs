@@ -8,7 +8,6 @@ namespace BTKRoadmapperAPI.Mapping
     {
         public MappingProfile() {
             CreateMap<User, UserDTO>().ReverseMap();
-            CreateMap<UserPreference, UserPreferencesDTO>().ReverseMap();
             CreateMap<CourseDTO, Course>().ReverseMap();
             CreateMap<Module, ModuleDTO>().ReverseMap();
         }

@@ -27,6 +27,7 @@ namespace BTKRoadmapperAPI.Abstractions
     int pageSize,
     params Expression<Func<T, object>>[] includes);
         Task<T> GetByIdCategoryAsync(int id);
+        Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes);
         Task AddAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);
         Task UpdateAsync(T entity, params Expression<Func<T, object>>[] updatedProperties);

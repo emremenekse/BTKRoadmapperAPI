@@ -51,6 +51,34 @@ namespace BTKRoadmapperAPI.Services
             var result = await _courseRepository.FindAsyncWithMany(c => courseIds.Contains(c.Id), c => c.Modules);
             return _mapper.Map<IEnumerable<CourseDTO>>(result);
         }
+        public async Task<List<CourseDTO>> GetCoursesWithManyByIdsAsync(List<int> courseIds)
+        {
+            var listCourses = new List<Course>();
+            foreach (var item in courseIds)
+            {
+                var course = await _courseRepository.GetByIdAsync(item, c => c.Modules);
+                listCourses.Add(course);
+            }
+
+            var courseDTOs = listCourses.Select(c => new CourseDTO
+            {
+                Id = c.Id,
+                CourseName = c.CourseName,
+                Category = c.Category, 
+                Level = c.Level,
+                Description = c.Description,
+                TotalRequeiredTimeInSeconds = c.TotalRequeiredTimeInSeconds,
+                Modules = c.Modules.Select(m => new ModuleDTO
+                {
+                    Title = m.Title,
+                    LessonCount = m.LessonCount,
+                }).ToList()
+            });
+
+            return courseDTOs.ToList();
+        }
+
+
 
         public async Task<Response<bool>> AddNewCourse(List<CourseDTO> courseDTOList)
         {

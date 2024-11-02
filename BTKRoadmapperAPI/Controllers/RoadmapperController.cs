@@ -23,7 +23,7 @@ namespace BTKRoadmapperAPI.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(IEnumerable<List<LLMResponse>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(IEnumerable<List<CourseDTO>>), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> GenerateRoadmap([FromBody] RoadmapDTO roadmap)
         {
             var roadmapData = await _geminiService.SendPromptAsync(roadmap);

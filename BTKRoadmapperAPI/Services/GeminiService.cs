@@ -64,6 +64,7 @@ Instructions:
 - Do not return an empty response. If you cannot find relevant courses, still include a couple of example courses as placeholders.
 - Only use the provided courses and format your response exactly as shown above.
 - Do not include courses that are very similar to each other in the response. Instead, select only one from similar courses.
+-Reponse format is extremely critical be careful.
 ";
 
             var requestBody = new
@@ -82,8 +83,8 @@ Instructions:
 
 
 
-            var response = await _httpService.SendRequestAsync<object, ResponseModel>  (
-            HttpMethod.Post, url, requestBody);
+            var response = await RetryAsync(() => _httpService.SendRequestAsync<object, ResponseModel>(
+        HttpMethod.Post, url, requestBody), maxRetries: 20);
 
             var courseIds = new List<int>();
             if (response?.Candidates != null)
@@ -142,6 +143,9 @@ Instructions:
 - Exclude courses that are not suitable for the user's preferences based on the module content.
 - For the remaining courses, provide a recommended learning order in ascending order of priority.
 - Ensure that the response is strictly in the specified format and that only relevant courses are included.
+- Only list suitable courses in the specified format.
+- Do not include any explanations or additional details.
+-Reponse format is extremely critical be careful.
 ";
 
                 var requestBodySecond = new
@@ -160,10 +164,11 @@ Instructions:
 
 
 
-                var responseSecond = await _httpService.SendRequestAsync<object, ResponseModel>(
-                HttpMethod.Post, url, requestBodySecond);
-
                 
+                var responseSecond = await RetryAsync(() => _httpService.SendRequestAsync<object, ResponseModel>(
+            HttpMethod.Post, url, requestBodySecond), maxRetries: 30);
+
+
                 if (responseSecond?.Candidates != null)
                 {
                     foreach (var candidate in responseSecond.Candidates)
@@ -193,7 +198,7 @@ Instructions:
                 if (courseOrders != null)
                 {
                     var newCourseIds = courseOrders.Select(result => result.CourseId);
-                    var courseFinalListResponse = await _courseService.GetCoursesWithModulesByIdsAsync(newCourseIds.ToList());
+                    var courseFinalListResponse = await _courseService.GetCoursesWithManyByIdsAsync(newCourseIds.ToList());
                     foreach (var item in courseFinalListResponse)
                     {
                         item.RecommendedOrder = courseOrders.Where(x => x.CourseId == item.Id).FirstOrDefault().RecommendedOrder;
@@ -210,11 +215,12 @@ Instructions:
                     Email= roadmapDTO.Email,
                     Role=roadmapDTO.Role,
                     Name=roadmapDTO.Name,
-                    UserPreferences = new UserPreferencesDTO() {
-                        AvailableHoursPerDaily = roadmapDTO.DailyAvailableTime,
-                        Interest = roadmapDTO.InterestedFields
-                    }
-                        
+                    AvailableHoursPerDaily = roadmapDTO.DailyAvailableTime,
+                    EducationLevel = roadmapDTO.EducationLevel,
+                    InterestedFields = roadmapDTO.InterestedFields,
+                    InterestedFieldSkillLevel = roadmapDTO.InterestedFieldSkillLevel,
+                    TargetField = roadmapDTO.TargetField
+
                 };
                 await _userService.AddUser(newUser);
             }
@@ -225,17 +231,38 @@ Instructions:
                     Email = roadmapDTO.Email,
                     Role = roadmapDTO.Role,
                     Name = roadmapDTO.Name,
-                    UserPreferences = new UserPreferencesDTO()
-                    {
-                        AvailableHoursPerDaily = roadmapDTO.DailyAvailableTime,
-                        Interest = roadmapDTO.InterestedFields
-                    }
+                    AvailableHoursPerDaily=roadmapDTO.DailyAvailableTime,
+                    EducationLevel=roadmapDTO.EducationLevel,
+                    InterestedFields=roadmapDTO.InterestedFields,
+                    InterestedFieldSkillLevel = roadmapDTO.InterestedFieldSkillLevel,
+                    TargetField = roadmapDTO.TargetField
 
                 };
                 await _userService.UpdateUser(newUser);
             }
 
             return Response<List< CourseDTO>>.Success(result, 200);
+        }
+
+        private async Task<T> RetryAsync<T>(Func<Task<T>> action, int maxRetries)
+        {
+            int retries = 0;
+            while (true)
+            {
+                try
+                {
+                    return await action();
+                }
+                catch (Exception ex)
+                {
+                    retries++;
+                    if (retries >= maxRetries)
+                    {
+                        throw new Exception($"Max retries reached: {ex.Message}", ex);
+                    }
+                    await Task.Delay(1000); // 1 saniye bekle
+                }
+            }
         }
     }
 }

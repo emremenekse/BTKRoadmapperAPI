@@ -12,7 +12,6 @@ namespace BTKRoadmapperAPI.Data
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<UserPreference> UserPreferences { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Module> Modules { get; set; }
 
@@ -20,21 +19,43 @@ namespace BTKRoadmapperAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Preferences)
-                .WithOne(p => p.User)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade); 
-
             modelBuilder.Entity<Course>()
                 .HasMany(c => c.Modules)
                 .WithOne(m => m.Course)
                 .HasForeignKey(m => m.CourseId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.Property(u => u.Name)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(u => u.Email)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(u => u.Role)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(u => u.AvailableHoursPerDaily)
+                    .IsRequired();
+
+                entity.Property(u => u.InterestedFields)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(u => u.EducationLevel)
+                    .IsRequired();
+
+                entity.Property(u => u.InterestedFieldSkillLevel)
+                    .IsRequired();
+
+                entity.Property(u => u.TargetField)
+                    .IsRequired();
+            });
 
         }
     }

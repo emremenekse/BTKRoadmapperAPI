@@ -114,6 +114,17 @@ namespace BTKRoadmapperAPI.Concrete
         {
             return await _dbSet.FindAsync(id);
         }
+        public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+        }
 
         public async Task<IEnumerable<T>> FindAsyncWithPagination(Expression<Func<T, bool>> predicate, int page,
     int pageSize)

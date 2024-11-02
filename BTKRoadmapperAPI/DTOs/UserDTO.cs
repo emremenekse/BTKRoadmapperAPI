@@ -2,9 +2,13 @@
 {
     public class UserDTO
     {
-        public required string Name { get; set; }
-        public required string Email { get; set; }
-        public required string Role { get; set; }
-        public UserPreferencesDTO  UserPreferences { get; set; }
+        public  string? Name { get; set; }
+        public  string? Email { get; set; }
+        public  string? Role { get; set; }
+        public int AvailableHoursPerDaily { get; set; }
+        public  string? InterestedFields { get; set; }
+        public EducationLevel EducationLevel { get; set; }
+        public SkillLevel InterestedFieldSkillLevel { get; set; }
+        public TargetField TargetField { get; set; }
     }
 }
