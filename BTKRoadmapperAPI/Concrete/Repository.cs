@@ -230,7 +230,12 @@ namespace BTKRoadmapperAPI.Concrete
         {
             await _dbSet.AddRangeAsync(entities);
         }
-
+        public async Task UpdateAsync(T entity)
+        {
+            _dbSet.Attach(entity); 
+            _context.Entry(entity).State = EntityState.Modified; 
+            await _context.SaveChangesAsync(); 
+        }
         public async Task UpdateAsync(T entity, params Expression<Func<T, object>>[] updatedProperties)
         {
             var dbEntityEntry = _context.Entry(entity);

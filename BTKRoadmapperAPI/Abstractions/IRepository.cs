@@ -31,6 +31,7 @@ namespace BTKRoadmapperAPI.Abstractions
         Task AddAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);
         Task UpdateAsync(T entity, params Expression<Func<T, object>>[] updatedProperties);
+        Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task UpdateFieldAsync<TField>(object id, Expression<Func<T, TField>> fieldSelector, TField newValue);
         Task<IEnumerable<T>> FindAsyncWithPagination(Expression<Func<T, bool>> predicate, int page,
