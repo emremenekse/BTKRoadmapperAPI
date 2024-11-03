@@ -37,11 +37,11 @@ namespace BTKRoadmapperAPI.Services
         public async Task<Response<bool>> UpdateUser(UserDTO userDTO)
         {
             var userList = await _userRepository.GetAllAsync();
-            var newUser = _mapper.Map<Entities.User>(userDTO);
             if (userList.Any(x => x.Email == userDTO.Email))
             {
                 var user = userList.Where(x => x.Email == userDTO.Email).FirstOrDefault();
-                user = newUser;
+
+                _mapper.Map<Entities.User>(userDTO);
                 await _userRepository.UpdateAsync(user);
                 await _unitOfWork.CommitAsync();
 
