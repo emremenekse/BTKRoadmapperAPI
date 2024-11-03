@@ -84,7 +84,7 @@ Instructions:
 
 
             var response = await RetryAsync(() => _httpService.SendRequestAsync<object, ResponseModel>(
-        HttpMethod.Post, url, requestBody), maxRetries: 20);
+        HttpMethod.Post, url, requestBody), maxRetries: 100);
 
             var courseIds = new List<int>();
             if (response?.Candidates != null)
@@ -166,7 +166,7 @@ Instructions:
 
                 
                 var responseSecond = await RetryAsync(() => _httpService.SendRequestAsync<object, ResponseModel>(
-            HttpMethod.Post, url, requestBodySecond), maxRetries: 30);
+            HttpMethod.Post, url, requestBodySecond), maxRetries: 100);
 
 
                 if (responseSecond?.Candidates != null)
