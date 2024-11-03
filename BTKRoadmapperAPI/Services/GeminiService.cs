@@ -93,7 +93,11 @@ Instructions:
                 {
                     foreach (var part in candidate.Content.Parts)
                     {
-                        var courseArray = JsonNode.Parse(part.Text).AsArray();
+                        var cleanedFirstJson = part.Text
+   .Replace("```json", "")
+   .Replace("```", "")
+   .Trim();
+                        var courseArray = JsonNode.Parse(cleanedFirstJson).AsArray();
                         foreach (var item in courseArray)
                         {
                             if (item["CourseId"] != null)
